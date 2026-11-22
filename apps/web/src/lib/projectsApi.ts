@@ -7,6 +7,11 @@ export function fetchProjects(includeArchived = false) {
     .then((r) => r.projects);
 }
 
+/** Projects the current (non-admin) user has been granted canView on. */
+export function fetchMyProjects() {
+  return api.get<{ projects: ProjectView[] }>("/projects/mine").then((r) => r.projects);
+}
+
 export function fetchProject(id: string) {
   return api.get<{ project: ProjectView }>(`/projects/${id}`).then((r) => r.project);
 }

@@ -2,6 +2,7 @@ import type {
   ApproveMeetingRequestInput,
   AvailableSlot,
   CreateMeetingRequestInput,
+  MeetingCategory,
   MeetingRequestView,
   ProposeAlternativeInput,
 } from "@scheduler/shared";
@@ -17,12 +18,20 @@ export function fetchAllRequests(status?: string) {
     .then((r) => r.requests);
 }
 
-export function fetchAvailability(start: Date, end: Date, durationMinutes: number) {
+export function fetchAvailability(
+  start: Date,
+  end: Date,
+  durationMinutes: number,
+  category: MeetingCategory,
+  projectId?: string
+) {
   const params = new URLSearchParams({
     start: start.toISOString(),
     end: end.toISOString(),
     durationMinutes: String(durationMinutes),
+    category,
   });
+  if (projectId) params.set("projectId", projectId);
   return api.get<{ slots: AvailableSlot[] }>(`/meeting-requests/availability?${params}`).then((r) => r.slots);
 }
 

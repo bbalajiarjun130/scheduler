@@ -17,6 +17,7 @@ import { asyncHandler } from "../middleware/errorHandler.js";
 import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js";
 import { checkConflict, isValidObjectId } from "../services/calendarService.js";
 import { getAvailableSlots } from "../services/availabilityService.js";
+import { assertCanScheduleIn } from "../services/permissionService.js";
 import { getSettings } from "../models/Settings.js";
 import { toMeetingRequestView, toEventView } from "../utils/serializers.js";
 import { recordAudit } from "../services/auditService.js";
@@ -49,7 +50,8 @@ async function loadView(doc: MeetingRequestDoc | null, isAdmin: boolean) {
 meetingRequestsRouter.get(
   "/availability",
   asyncHandler(async (req, res) => {
-    const { start, end, durationMinutes } = availabilityQuerySchema.parse(req.query);
+    const { start, end, durationMinutes, category, projectId } = availabilityQuerySchema.parse(req.query);
+    await assertCanScheduleIn(req.user!, { category, projectId, intent: "view" });
     const slots = await getAvailableSlots(start, end, durationMinutes);
     res.json({ slots: slots.map((s) => ({ start: s.start.toISOString(), end: s.end.toISOString() })) });
   })
@@ -87,6 +89,14 @@ meetingRequestsRouter.post(
       const project = await Project.findById(input.projectId);
       if (!project) throw ApiError.badRequest("Project not found");
     }
+
+    await assertCanScheduleIn(req.user!, {
+      category: input.category,
+      projectId: input.projectId,
+      format: input.format,
+      durationMinutes: input.durationMinutes,
+      intent: "request",
+    });
 
     const settings = await getSettings();
     const end = new Date(input.start.getTime() + input.durationMinutes * 60 * 1000);

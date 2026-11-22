@@ -6,6 +6,7 @@ import {
   FolderKanban,
   Inbox,
   Users,
+  ShieldCheck,
   Settings,
   Moon,
   Sun,
@@ -25,6 +26,7 @@ const navItems = [
 const adminNavItems = [
   { to: "/admin/requests", label: "Approve Requests", icon: Inbox },
   { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/permissions", label: "Permissions", icon: ShieldCheck },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

@@ -17,6 +17,7 @@ import { ProjectDetailPage } from "@/pages/ProjectDetailPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { RequestsPage } from "@/pages/RequestsPage";
 import { AdminRequestsPage } from "@/pages/admin/AdminRequestsPage";
+import { AdminPermissionsPage } from "@/pages/admin/AdminPermissionsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -48,6 +49,7 @@ export default function App() {
                 <Route element={<RequireAdmin />}>
                   <Route path="/admin/users" element={<AdminUsersPage />} />
                   <Route path="/admin/requests" element={<AdminRequestsPage />} />
+                  <Route path="/admin/permissions" element={<AdminPermissionsPage />} />
                   <Route path="/admin/settings" element={<PlaceholderPage title="Settings" />} />
                 </Route>
               </Route>

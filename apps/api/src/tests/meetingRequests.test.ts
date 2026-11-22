@@ -2,8 +2,28 @@ import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 import { createApp } from "../app.js";
 import { User } from "../models/User.js";
+import { UserPermissions } from "../models/UserPermissions.js";
 
 const app = createApp();
+
+// These tests exercise the meeting-request lifecycle, not the Phase 6 permission gate
+// (see permissions.test.ts for that) — so give the test collaborator blanket access.
+async function grantFullGeneralAndSocialAccess(userId: string) {
+  await UserPermissions.findOneAndUpdate(
+    { userId },
+    {
+      userId,
+      canRequestGeneral: true,
+      canSeeGeneralAvailability: true,
+      canRequestSocial: true,
+      canSeeSocialAvailability: true,
+      canRequestOnline: true,
+      canRequestInPerson: true,
+      allowedDurations: [],
+    },
+    { upsert: true }
+  );
+}
 
 async function signupAndLoginAdmin() {
   await request(app).post("/api/auth/signup").send({
@@ -25,6 +45,7 @@ async function signupApprovedCollaborator(adminCookies: string[]) {
   });
   const collab = await User.findOne({ email: "collab@example.com" });
   await request(app).post(`/api/users/${collab!._id}/approve`).set("Cookie", adminCookies);
+  await grantFullGeneralAndSocialAccess(collab!._id.toString());
   const login = await request(app)
     .post("/api/auth/login")
     .send({ email: "collab@example.com", password: "supersecret1" });
@@ -244,7 +265,7 @@ describe("meeting requests", () => {
   it("the availability endpoint returns open slots that respect working hours and existing bookings", async () => {
     const res = await request(app)
       .get("/api/meeting-requests/availability")
-      .query({ start: DAY_START_ISO, end: DAY_END_ISO, durationMinutes: 30 })
+      .query({ start: DAY_START_ISO, end: DAY_END_ISO, durationMinutes: 30, category: "general" })
       .set("Cookie", userCookies);
     expect(res.status).toBe(200);
     expect(res.body.slots.length).toBeGreaterThan(0);

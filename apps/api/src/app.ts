@@ -13,6 +13,7 @@ import { eventsRouter } from "./routes/events.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { projectsRouter } from "./routes/projects.js";
 import { meetingRequestsRouter } from "./routes/meetingRequests.js";
+import { permissionsRouter } from "./routes/permissions.js";
 
 export function createApp() {
   const app = express();
@@ -44,6 +45,7 @@ export function createApp() {
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/projects", projectsRouter);
   app.use("/api/meeting-requests", meetingRequestsRouter);
+  app.use("/api/permissions", permissionsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -1,4 +1,11 @@
-import type { CalendarEventView, MeetingRequestView, ProjectView, PublicUser } from "@scheduler/shared";
+import type {
+  CalendarEventView,
+  MeetingRequestView,
+  ProjectPermissionView,
+  ProjectView,
+  PublicUser,
+  UserPermissionsView,
+} from "@scheduler/shared";
 import type { UserDoc } from "../models/User.js";
 import type { ProjectDoc } from "../models/Project.js";
 import type { MeetingRequestDoc } from "../models/MeetingRequest.js";
@@ -22,7 +29,8 @@ export function toProjectView(
   project: Omit<ProjectDoc, "collaborators"> & {
     collaborators: Array<{ _id: { toString(): string }; name: string; email: string }>;
   },
-  hours: ProjectHours
+  hours: ProjectHours,
+  isAdmin: boolean
 ): ProjectView {
   return {
     id: project._id.toString(),
@@ -34,10 +42,46 @@ export function toProjectView(
     deadline: project.deadline?.toISOString(),
     archived: project.archived,
     collaborators: project.collaborators.map((c) => ({ id: c._id.toString(), name: c.name, email: c.email })),
-    notes: project.notes ?? undefined,
+    // Private admin notes never reach a non-admin response, regardless of what the caller passes in.
+    notes: isAdmin ? project.notes ?? undefined : undefined,
     totalScheduledHours: hours.totalScheduledHours,
     totalCompletedHours: hours.totalCompletedHours,
     createdAt: (project as unknown as { createdAt: Date }).createdAt?.toISOString() ?? new Date().toISOString(),
+  };
+}
+
+export function toProjectPermissionView(params: {
+  userId: string;
+  projectId: string;
+  canView: boolean;
+  canRequestMeeting: boolean;
+  canRequestOnline: boolean;
+  canRequestInPerson: boolean;
+  allowedDurations: number[];
+}): ProjectPermissionView {
+  return { ...params };
+}
+
+export function toUserPermissionsView(userId: string, perms: {
+  canRequestGeneral: boolean;
+  canSeeGeneralAvailability: boolean;
+  canRequestSocial: boolean;
+  canSeeSocialAvailability: boolean;
+  canRequestOnline: boolean;
+  canRequestInPerson: boolean;
+  allowedDurations: number[];
+}): UserPermissionsView {
+  // Explicit field access rather than a spread: `perms` may be a Mongoose document,
+  // whose schema fields live behind getters and don't come along with `{...doc}`.
+  return {
+    userId,
+    canRequestGeneral: perms.canRequestGeneral,
+    canSeeGeneralAvailability: perms.canSeeGeneralAvailability,
+    canRequestSocial: perms.canRequestSocial,
+    canSeeSocialAvailability: perms.canSeeSocialAvailability,
+    canRequestOnline: perms.canRequestOnline,
+    canRequestInPerson: perms.canRequestInPerson,
+    allowedDurations: perms.allowedDurations,
   };
 }
 

@@ -54,6 +54,8 @@ export const availabilityQuerySchema = z.object({
   start: z.coerce.date(),
   end: z.coerce.date(),
   durationMinutes: z.coerce.number().int().positive().max(480),
+  category: meetingCategorySchema,
+  projectId: z.string().optional(),
 });
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
 

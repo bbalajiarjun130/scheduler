@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiRequestError } from "@/lib/apiClient";
 import { createMeetingRequest, fetchAvailability } from "@/lib/meetingRequestsApi";
-import { fetchProjects } from "@/lib/projectsApi";
+import { fetchMyProjects } from "@/lib/projectsApi";
 
 const durationOptions = [15, 30, 45, 60, 90];
 
@@ -33,8 +33,8 @@ export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; 
   const [submitting, setSubmitting] = useState(false);
 
   const { data: projects = [] } = useQuery({
-    queryKey: ["projects", false],
-    queryFn: () => fetchProjects(false),
+    queryKey: ["my-projects"],
+    queryFn: fetchMyProjects,
     enabled: category === "project",
   });
 
@@ -43,15 +43,19 @@ export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; 
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ["availability", rangeFrom, rangeTo, duration],
-    queryFn: () => fetchAvailability(new Date(rangeFrom), new Date(rangeTo), duration),
+    queryKey: ["availability", rangeFrom, rangeTo, duration, category, projectId],
+    queryFn: () => fetchAvailability(new Date(rangeFrom), new Date(rangeTo), duration, category, projectId || undefined),
     enabled: false,
   });
 
   async function handleFindTimes() {
     setSlotsLoaded(true);
     setSelectedSlot(null);
-    await refetch();
+    setError(null);
+    const result = await refetch();
+    if (result.error) {
+      setError(result.error instanceof ApiRequestError ? result.error.message : "Could not load availability");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
