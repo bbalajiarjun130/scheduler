@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DateTime } from "luxon";
+import { useQuery } from "@tanstack/react-query";
 import type { CalendarEventView, EventType } from "@scheduler/shared";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,10 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiRequestError } from "@/lib/apiClient";
 import { createEvent, deleteEvent, parseOccurrenceId, updateEvent } from "@/lib/eventsApi";
+import { fetchProjects } from "@/lib/projectsApi";
 import { categoryLabel } from "@/lib/eventStyle";
+
+const projectLinkedTypes: EventType[] = ["work_session", "meeting"];
 
 const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -53,12 +57,19 @@ export function EventFormDialog({ initialRange, defaultType, editingEvent, onClo
   const [endLocal, setEndLocal] = useState(
     editingEvent ? toLocalInputValue(editingEvent.end, timezone) : DateTime.fromJSDate(initialRange!.end).toFormat("yyyy-MM-dd'T'HH:mm")
   );
+  const [projectId, setProjectId] = useState(editingEvent?.projectId ?? "");
   const [recurrence, setRecurrence] = useState("");
   const [recurrenceCount, setRecurrenceCount] = useState("");
   const [scope, setScope] = useState<"instance" | "all">("instance");
   const [error, setError] = useState<string | null>(null);
   const [conflictInfo, setConflictInfo] = useState<CalendarEventView[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects", false],
+    queryFn: () => fetchProjects(false),
+    enabled: projectLinkedTypes.includes(type),
+  });
 
   async function handleSave(overrideConflicts = false) {
     setError(null);
@@ -78,6 +89,7 @@ export function EventFormDialog({ initialRange, defaultType, editingEvent, onClo
           isPrivate,
           timezone,
           overrideConflicts,
+          projectId: projectLinkedTypes.includes(type) ? projectId || undefined : undefined,
           ...(isRecurring
             ? { scope, occurrenceStart: new Date(occurrenceStart), ...(scope === "instance" ? { start, end } : {}) }
             : { start, end }),
@@ -98,6 +110,7 @@ export function EventFormDialog({ initialRange, defaultType, editingEvent, onClo
           timezone,
           recurrenceRule,
           overrideConflicts,
+          projectId: projectLinkedTypes.includes(type) ? projectId || undefined : undefined,
         });
       }
       onSaved();
@@ -163,6 +176,20 @@ export function EventFormDialog({ initialRange, defaultType, editingEvent, onClo
             ))}
           </Select>
         </div>
+
+        {projectLinkedTypes.includes(type) && (
+          <div className="flex flex-col gap-1.5">
+            <Label>Project (optional)</Label>
+            <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+              <option value="">No project</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <Label>Title</Label>

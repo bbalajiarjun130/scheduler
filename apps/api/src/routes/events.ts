@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Types } from "mongoose";
 import { z } from "zod";
 import rrulePkg from "rrule";
 const { rrulestr } = rrulePkg;
@@ -8,6 +9,7 @@ import {
   eventRangeQuerySchema,
 } from "@scheduler/shared";
 import { CalendarEvent } from "../models/CalendarEvent.js";
+import { Project } from "../models/Project.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
@@ -27,11 +29,18 @@ function assertValidRRule(rule: string) {
   }
 }
 
+async function assertProjectExists(projectId: string) {
+  if (!isValidObjectId(projectId)) throw ApiError.badRequest("Invalid projectId");
+  const exists = await Project.exists({ _id: projectId });
+  if (!exists) throw ApiError.badRequest("Project not found");
+}
+
 eventsRouter.get(
   "/",
   asyncHandler(async (req, res) => {
-    const { start, end } = eventRangeQuerySchema.parse(req.query);
-    const occurrences = await listOccurrencesInRange(start, end);
+    const { start, end, projectId } = eventRangeQuerySchema.parse(req.query);
+    let occurrences = await listOccurrencesInRange(start, end);
+    if (projectId) occurrences = occurrences.filter((e) => e.projectId === projectId);
     res.json({ events: occurrences.map(toEventView) });
   })
 );
@@ -56,6 +65,7 @@ eventsRouter.post(
     const input = createEventSchema.parse(req.body);
     if (input.recurrenceRule) assertValidRRule(input.recurrenceRule);
     if (input.end <= input.start) throw ApiError.badRequest("End time must be after start time");
+    if (input.projectId) await assertProjectExists(input.projectId);
 
     if (!input.overrideConflicts) {
       const { conflicts, conflictingEvents } = await checkConflict(input.start, input.end);
@@ -98,6 +108,7 @@ eventsRouter.patch(
   "/:id",
   asyncHandler(async (req, res) => {
     const input = updateEventSchema.parse(req.body);
+    if (input.projectId) await assertProjectExists(input.projectId);
     const master = await findMasterOr404(req.params.id);
 
     const isRecurring = Boolean(master.recurrenceRule);
@@ -141,6 +152,7 @@ eventsRouter.patch(
             startUtc: newStart,
             endUtc: newEnd,
             status: input.status ?? "confirmed",
+            ...(input.completedHours !== undefined ? { completedHours: input.completedHours } : {}),
           },
         },
         { upsert: true, new: true }
@@ -188,6 +200,8 @@ eventsRouter.patch(
     if (input.location !== undefined) master.location = input.location;
     if (input.timezone !== undefined) master.timezone = input.timezone;
     if (input.status !== undefined) master.status = input.status;
+    if (input.completedHours !== undefined) master.completedHours = input.completedHours;
+    if (input.projectId !== undefined) master.projectId = new Types.ObjectId(input.projectId);
 
     await master.save();
 

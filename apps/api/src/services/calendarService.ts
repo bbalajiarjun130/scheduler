@@ -25,6 +25,7 @@ export interface ExpandedEvent {
   isRecurring: boolean;
   isOverride: boolean;
   createdBy: string;
+  completedHours?: number;
 }
 
 export function toExpanded(doc: CalendarEventDoc, start: Date, end: Date, masterId: string, isOverride: boolean): ExpandedEvent {
@@ -47,6 +48,7 @@ export function toExpanded(doc: CalendarEventDoc, start: Date, end: Date, master
     isRecurring: Boolean(doc.recurrenceRule) || isOverride,
     isOverride,
     createdBy: doc.createdBy.toString(),
+    completedHours: doc.completedHours ?? undefined,
   };
 }
 

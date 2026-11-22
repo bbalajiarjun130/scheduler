@@ -12,6 +12,8 @@ import { PendingPage } from "@/pages/PendingPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { CalendarPage } from "@/pages/CalendarPage";
+import { ProjectsPage } from "@/pages/ProjectsPage";
+import { ProjectDetailPage } from "@/pages/ProjectDetailPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 
 const queryClient = new QueryClient({
@@ -37,7 +39,8 @@ export default function App() {
               <Route element={<AppLayout />}>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailPage />} />
                 <Route path="/requests" element={<PlaceholderPage title="Meeting Requests" />} />
 
                 <Route element={<RequireAdmin />}>

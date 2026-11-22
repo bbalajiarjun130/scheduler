@@ -27,6 +27,8 @@ export const updateEventSchema = z.object({
   timezone: z.string().min(1).optional(),
   location: z.string().max(300).optional(),
   status: z.enum(["confirmed", "completed", "cancelled"]).optional(),
+  completedHours: z.number().min(0).max(1000).optional(),
+  projectId: z.string().optional(),
   overrideConflicts: z.boolean().optional(),
   scope: z.enum(["instance", "all"]).optional(), // for recurring events: this occurrence only, or the whole series
   occurrenceStart: z.coerce.date().optional(), // required when scope=instance
@@ -36,6 +38,7 @@ export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 export const eventRangeQuerySchema = z.object({
   start: z.coerce.date(),
   end: z.coerce.date(),
+  projectId: z.string().optional(),
 });
 export type EventRangeQuery = z.infer<typeof eventRangeQuerySchema>;
 
@@ -58,4 +61,5 @@ export interface CalendarEventView {
   isRecurring: boolean;
   isOverride: boolean;
   createdBy: string;
+  completedHours?: number;
 }
