@@ -17,6 +17,7 @@ import { listOccurrencesInRange, checkConflict, isValidObjectId, toExpanded } fr
 import { toEventView } from "../utils/serializers.js";
 import { recordAudit } from "../services/auditService.js";
 import { syncMeetingRequestFromEventChange } from "../services/meetingSyncService.js";
+import { updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from "../services/googleCalendarService.js";
 
 export const eventsRouter = Router();
 
@@ -212,10 +213,18 @@ eventsRouter.patch(
 
     if (master.source === "meeting_approval") {
       if (statusChangedTo === "cancelled") {
+        if (master.googleEventId) await deleteGoogleCalendarEvent(master.googleEventId);
         await syncMeetingRequestFromEventChange(master._id.toString(), { cancelled: true });
       } else if (statusChangedTo === "completed") {
         await syncMeetingRequestFromEventChange(master._id.toString(), { completed: true });
       } else if (timeMoved) {
+        if (master.googleEventId) {
+          await updateGoogleCalendarEvent(master.googleEventId, {
+            start: master.startUtc,
+            end: master.endUtc,
+            timezone: master.timezone,
+          });
+        }
         await syncMeetingRequestFromEventChange(master._id.toString(), { newStart: master.startUtc, newEnd: master.endUtc });
       }
     }
@@ -260,6 +269,7 @@ eventsRouter.delete(
       );
     } else {
       if (master.source === "meeting_approval") {
+        if (master.googleEventId) await deleteGoogleCalendarEvent(master.googleEventId);
         await syncMeetingRequestFromEventChange(master._id.toString(), { cancelled: true });
       }
       await CalendarEvent.deleteMany({ $or: [{ _id: master._id }, { parentEventId: master._id }] });

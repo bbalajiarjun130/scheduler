@@ -18,6 +18,7 @@ import { requireAuth, requireRole, requireApproved } from "../middleware/auth.js
 import { checkConflict, isValidObjectId } from "../services/calendarService.js";
 import { getAvailableSlots } from "../services/availabilityService.js";
 import { assertCanScheduleIn } from "../services/permissionService.js";
+import { createGoogleCalendarEvent, deleteGoogleCalendarEvent } from "../services/googleCalendarService.js";
 import { getSettings } from "../models/Settings.js";
 import { toMeetingRequestView, toEventView } from "../utils/serializers.js";
 import { recordAudit } from "../services/auditService.js";
@@ -44,7 +45,10 @@ async function loadView(doc: MeetingRequestDoc | null, isAdmin: boolean) {
   const projectName = populated.projectId
     ? (await Project.findById(populated.projectId).select("name"))?.name
     : undefined;
-  return toMeetingRequestView(populated as never, populated.requesterId as never, { isAdmin, projectName });
+  const meetUrl = populated.resultingEventId
+    ? (await CalendarEvent.findById(populated.resultingEventId).select("meetUrl"))?.meetUrl ?? undefined
+    : undefined;
+  return toMeetingRequestView(populated as never, populated.requesterId as never, { isAdmin, projectName, meetUrl });
 }
 
 meetingRequestsRouter.get(
@@ -169,7 +173,8 @@ meetingRequestsRouter.post(
     await request.save();
 
     if (request.resultingEventId) {
-      await CalendarEvent.findByIdAndUpdate(request.resultingEventId, { status: "cancelled" });
+      const linkedEvent = await CalendarEvent.findByIdAndUpdate(request.resultingEventId, { status: "cancelled" });
+      if (linkedEvent?.googleEventId) await deleteGoogleCalendarEvent(linkedEvent.googleEventId);
     }
 
     const isRequester = request.requesterId.toString() === req.user!._id.toString();
@@ -214,7 +219,7 @@ meetingRequestsRouter.post(
     const event = await CalendarEvent.create({
       type: "meeting",
       title: request.title,
-      description: request.description,
+      description: request.description ?? undefined,
       isPrivate: false,
       startUtc: request.alternativeStartUtc,
       endUtc: request.alternativeEndUtc,
@@ -225,6 +230,24 @@ meetingRequestsRouter.post(
       status: "confirmed",
       createdBy: req.user!._id,
     });
+
+    if (request.format === "online") {
+      const requesterForInvite = await User.findById(request.requesterId);
+      const synced = await createGoogleCalendarEvent({
+        title: request.title,
+        description: request.description ?? undefined,
+        start: request.alternativeStartUtc,
+        end: request.alternativeEndUtc,
+        timezone: request.timezone ?? "UTC",
+        attendeeEmails: requesterForInvite ? [requesterForInvite.email] : [],
+        isOnline: true,
+      });
+      if (synced) {
+        event.googleEventId = synced.googleEventId;
+        event.meetUrl = synced.meetUrl;
+        await event.save();
+      }
+    }
 
     request.status = "approved";
     request.startUtc = request.alternativeStartUtc;
@@ -305,10 +328,12 @@ meetingRequestsRouter.post(
       }
     }
 
+    const requester = await User.findById(request.requesterId);
+
     const event = await CalendarEvent.create({
       type: "meeting",
       title: request.title,
-      description: request.description,
+      description: request.description ?? undefined,
       isPrivate: false,
       startUtc: start,
       endUtc: end,
@@ -320,6 +345,23 @@ meetingRequestsRouter.post(
       createdBy: req.user!._id,
     });
 
+    if (format === "online") {
+      const synced = await createGoogleCalendarEvent({
+        title: request.title,
+        description: request.description ?? undefined,
+        start,
+        end,
+        timezone: request.timezone ?? "UTC",
+        attendeeEmails: requester ? [requester.email] : [],
+        isOnline: true,
+      });
+      if (synced) {
+        event.googleEventId = synced.googleEventId;
+        event.meetUrl = synced.meetUrl;
+        await event.save();
+      }
+    }
+
     request.status = "approved";
     request.startUtc = start;
     request.endUtc = end;
@@ -329,7 +371,6 @@ meetingRequestsRouter.post(
     if (input.adminNotes !== undefined) request.adminNotes = input.adminNotes;
     await request.save();
 
-    const requester = await User.findById(request.requesterId);
     await notifyUser({ userId: request.requesterId, type: "meeting_approved", message: `Your meeting "${request.title}" was approved` });
     if (requester) {
       await emailProvider.send({

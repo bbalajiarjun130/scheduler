@@ -39,3 +39,13 @@ export function generateOpaqueToken(): [string, string] {
 export function hashOpaqueToken(raw: string): string {
   return crypto.createHash("sha256").update(raw).digest("hex");
 }
+
+/** Short-lived signed state for the Google OAuth redirect round-trip (CSRF protection). */
+export function signOAuthState(adminUserId: string): string {
+  return jwt.sign({ sub: adminUserId }, env.JWT_ACCESS_SECRET, { expiresIn: "10m" });
+}
+
+export function verifyOAuthState(state: string): string {
+  const payload = jwt.verify(state, env.JWT_ACCESS_SECRET) as { sub: string };
+  return payload.sub;
+}
