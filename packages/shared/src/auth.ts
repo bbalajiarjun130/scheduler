@@ -24,6 +24,11 @@ export const resetPasswordSchema = z.object({
 });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
+export const googleSignInSchema = z.object({
+  credential: z.string().min(1),
+});
+export type GoogleSignInInput = z.infer<typeof googleSignInSchema>;
+
 export const verifyEmailSchema = z.object({
   token: z.string().min(1),
 });

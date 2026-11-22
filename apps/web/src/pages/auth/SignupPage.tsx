@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, ApiRequestError } from "@/lib/apiClient";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -55,6 +56,9 @@ export function SignupPage() {
           {submitting ? "Creating account..." : "Sign up"}
         </Button>
       </form>
+      <div className="mt-4">
+        <GoogleSignInButton />
+      </div>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link to="/login" className="font-medium text-foreground underline">

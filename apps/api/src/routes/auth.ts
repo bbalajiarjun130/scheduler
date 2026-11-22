@@ -4,11 +4,13 @@ import bcrypt from "bcryptjs";
 import {
   signupSchema,
   loginSchema,
+  googleSignInSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
   verifyEmailSchema,
 } from "@scheduler/shared";
 import { User } from "../models/User.js";
+import { verifyGoogleCredential } from "../services/googleSignIn.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -89,8 +91,67 @@ authRouter.post(
     const user = await User.findOne({ email: input.email }).select("+passwordHash");
     if (!user) throw ApiError.unauthorized("Invalid email or password");
 
+    if (!user.passwordHash) {
+      throw ApiError.badRequest("This account uses Google sign-in. Continue with Google instead.");
+    }
+
     const matches = await bcrypt.compare(input.password, user.passwordHash);
     if (!matches) throw ApiError.unauthorized("Invalid email or password");
+
+    if (user.status === "rejected" || user.status === "suspended" || user.status === "deactivated") {
+      throw ApiError.forbidden("Your account is not active. Contact the administrator.");
+    }
+
+    const accessToken = signAccessToken({ sub: user._id.toString(), role: user.role, status: user.status });
+    const refreshToken = signRefreshToken({ sub: user._id.toString(), version: user.refreshTokenVersion });
+    setAuthCookies(res, accessToken, refreshToken);
+
+    res.json({ user: toPublicUser(user) });
+  })
+);
+
+authRouter.post(
+  "/google",
+  strictAuthLimiter,
+  asyncHandler(async (req, res) => {
+    const input = googleSignInSchema.parse(req.body);
+    const profile = await verifyGoogleCredential(input.credential);
+
+    if (!profile.emailVerified) {
+      throw ApiError.badRequest("Your Google account's email is not verified.");
+    }
+
+    let user = await User.findOne({ googleId: profile.googleId });
+
+    if (!user) {
+      // No account for this Google identity yet — look for an existing password
+      // account with the same (Google-verified) email and link them instead of
+      // creating a duplicate.
+      user = await User.findOne({ email: profile.email });
+      if (user) {
+        user.googleId = profile.googleId;
+        user.emailVerified = true;
+        await user.save();
+      } else {
+        const isFirstUser = (await User.countDocuments({})) === 0;
+        user = await User.create({
+          name: profile.name,
+          email: profile.email,
+          googleId: profile.googleId,
+          emailVerified: true,
+          role: isFirstUser ? "admin" : "user",
+          status: isFirstUser ? "approved" : "pending",
+        });
+
+        if (!isFirstUser) {
+          await notifyAllAdmins({
+            type: "user_registered",
+            message: `${user.name} (${user.email}) registered via Google and is awaiting approval.`,
+            link: "/admin/users",
+          });
+        }
+      }
+    }
 
     if (user.status === "rejected" || user.status === "suspended" || user.status === "deactivated") {
       throw ApiError.forbidden("Your account is not active. Contact the administrator.");

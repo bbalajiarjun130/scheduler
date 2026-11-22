@@ -4,7 +4,9 @@ const userSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true, select: false },
+    // Optional: a Google-only account (created via "Sign in with Google") has no password.
+    passwordHash: { type: String, select: false },
+    googleId: { type: String, unique: true, sparse: true },
     role: { type: String, enum: ["admin", "user"], default: "user", required: true },
     status: {
       type: String,
