@@ -4,3 +4,5 @@ export * from "./calendar.js";
 export * from "./projects.js";
 export * from "./meetings.js";
 export * from "./permissions.js";
+export * from "./settings.js";
+export * from "./notifications.js";

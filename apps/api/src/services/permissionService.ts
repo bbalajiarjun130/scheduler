@@ -74,6 +74,11 @@ export async function assertCanScheduleIn(
     return;
   }
 
+  if (params.category === "social") {
+    const settings = await getSettings();
+    if (!settings.socialSchedulingEnabled) throw ApiError.forbidden("Social scheduling is currently disabled");
+  }
+
   const userPerms = await getUserPermissions(user._id);
   const canSee = params.category === "general" ? userPerms.canSeeGeneralAvailability : userPerms.canSeeSocialAvailability;
   const canRequest = params.category === "general" ? userPerms.canRequestGeneral : userPerms.canRequestSocial;

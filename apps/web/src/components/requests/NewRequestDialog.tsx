@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { MeetingCategory, MeetingFormat } from "@scheduler/shared";
 import { Modal } from "@/components/ui/modal";
@@ -10,10 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiRequestError } from "@/lib/apiClient";
 import { createMeetingRequest, fetchAvailability } from "@/lib/meetingRequestsApi";
 import { fetchMyProjects } from "@/lib/projectsApi";
-
-const durationOptions = [15, 30, 45, 60, 90];
+import { fetchPublicSettings } from "@/lib/settingsApi";
 
 export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const { data: publicSettings } = useQuery({ queryKey: ["settings", "public"], queryFn: fetchPublicSettings });
+  const durationOptions = publicSettings?.availableDurations ?? [30];
+
   const [category, setCategory] = useState<MeetingCategory>("general");
   const [projectId, setProjectId] = useState("");
   const [title, setTitle] = useState("");
@@ -31,6 +33,13 @@ export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; 
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (publicSettings && !publicSettings.availableDurations.includes(duration)) {
+      setDuration(publicSettings.availableDurations[0] ?? 30);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicSettings]);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["my-projects"],

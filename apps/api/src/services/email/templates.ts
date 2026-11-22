@@ -14,6 +14,14 @@ export function passwordResetTemplate(name: string, resetUrl: string) {
   };
 }
 
+export function newRegistrationAdminTemplate(name: string, email: string) {
+  return {
+    subject: `New registration: ${name}`,
+    html: `<p>${name} (${email}) just registered and is awaiting approval.</p>`,
+    text: `${name} (${email}) just registered and is awaiting approval.`,
+  };
+}
+
 export function accountApprovedTemplate(name: string, loginUrl: string) {
   return {
     subject: "Your account has been approved",

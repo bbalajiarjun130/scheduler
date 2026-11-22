@@ -24,9 +24,10 @@ import {
 import { setAuthCookies, clearAuthCookies, REFRESH_COOKIE } from "../utils/cookies.js";
 import { toPublicUser } from "../utils/serializers.js";
 import { emailProvider } from "../services/email/index.js";
-import { verifyEmailTemplate, passwordResetTemplate } from "../services/email/templates.js";
-import { notifyAllAdmins } from "../services/notificationService.js";
+import { verifyEmailTemplate, passwordResetTemplate, newRegistrationAdminTemplate } from "../services/email/templates.js";
+import { notifyAllAdmins, getAdmins } from "../services/notificationService.js";
 import { recordAudit } from "../services/auditService.js";
+import { getSettings } from "../models/Settings.js";
 import { env, isTest } from "../config/env.js";
 
 export const authRouter = Router();
@@ -73,6 +74,14 @@ authRouter.post(
         message: `${user.name} (${user.email}) registered and is awaiting approval.`,
         link: "/admin/users",
       });
+
+      const settings = await getSettings();
+      if (settings.notifyEmailOnNewRegistration) {
+        const admins = await getAdmins();
+        for (const admin of admins) {
+          await emailProvider.send({ to: admin.email, ...newRegistrationAdminTemplate(user.name, user.email) });
+        }
+      }
     }
 
     res.status(201).json({

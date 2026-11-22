@@ -1,13 +1,18 @@
 import type {
   CalendarEventView,
   MeetingRequestView,
+  NotificationView,
   ProjectPermissionView,
   ProjectView,
+  PublicSettingsView,
   PublicUser,
+  SettingsView,
   UserPermissionsView,
 } from "@scheduler/shared";
 import type { UserDoc } from "../models/User.js";
 import type { ProjectDoc } from "../models/Project.js";
+import type { SettingsDoc } from "../models/Settings.js";
+import type { NotificationDoc } from "../models/Notification.js";
 import type { MeetingRequestDoc } from "../models/MeetingRequest.js";
 import type { ExpandedEvent } from "../services/calendarService.js";
 import type { ProjectHours } from "../services/projectHoursService.js";
@@ -135,5 +140,49 @@ export function toEventView(event: ExpandedEvent): CalendarEventView {
     isOverride: event.isOverride,
     createdBy: event.createdBy,
     completedHours: event.completedHours,
+  };
+}
+
+export function toSettingsView(s: SettingsDoc): SettingsView {
+  return {
+    defaultTimezone: s.defaultTimezone,
+    workingDays: s.workingDays,
+    workingHoursStart: s.workingHoursStart,
+    workingHoursEnd: s.workingHoursEnd,
+    bufferMinutes: s.bufferMinutes,
+    minNoticeHours: s.minNoticeHours,
+    maxAdvanceDays: s.maxAdvanceDays,
+    availableDurations: s.availableDurations,
+    defaultMeetingFormat: s.defaultMeetingFormat as SettingsView["defaultMeetingFormat"],
+    socialSchedulingEnabled: s.socialSchedulingEnabled,
+    notifyEmailOnNewRegistration: s.notifyEmailOnNewRegistration,
+    notifyEmailOnMeetingRequest: s.notifyEmailOnMeetingRequest,
+    reminderMinutesBefore: s.reminderMinutesBefore,
+    defaultCalendarView: s.defaultCalendarView as SettingsView["defaultCalendarView"],
+  };
+}
+
+export function toPublicSettingsView(s: SettingsDoc): PublicSettingsView {
+  return {
+    defaultTimezone: s.defaultTimezone,
+    workingDays: s.workingDays,
+    workingHoursStart: s.workingHoursStart,
+    workingHoursEnd: s.workingHoursEnd,
+    minNoticeHours: s.minNoticeHours,
+    maxAdvanceDays: s.maxAdvanceDays,
+    availableDurations: s.availableDurations,
+    defaultMeetingFormat: s.defaultMeetingFormat as PublicSettingsView["defaultMeetingFormat"],
+    socialSchedulingEnabled: s.socialSchedulingEnabled,
+  };
+}
+
+export function toNotificationView(n: NotificationDoc & { _id: { toString(): string } }): NotificationView {
+  return {
+    id: n._id.toString(),
+    type: n.type,
+    message: n.message,
+    link: n.link ?? undefined,
+    read: n.read ?? false,
+    createdAt: (n as unknown as { createdAt: Date }).createdAt?.toISOString() ?? new Date().toISOString(),
   };
 }

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fetchGoogleStatus, getGoogleConnectUrl, disconnectGoogle } from "@/lib/integrationsApi";
 import { ApiRequestError } from "@/lib/apiClient";
+import { SchedulingSettingsForm } from "@/components/settings/SchedulingSettingsForm";
 
 export function AdminSettingsPage() {
   const [params, setParams] = useSearchParams();
@@ -122,6 +123,8 @@ export function AdminSettingsPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
         </CardContent>
       </Card>
+
+      <SchedulingSettingsForm />
     </div>
   );
 }

@@ -126,17 +126,19 @@ meetingRequestsRouter.post(
       location: input.location,
     });
 
-    const admins = await getAdmins();
     await notifyAllAdmins({
       type: "meeting_requested",
       message: `${req.user!.name} requested a meeting: "${input.title}"`,
       link: "/requests",
     });
-    for (const admin of admins) {
-      await emailProvider.send({
-        to: admin.email,
-        ...newMeetingRequestAdminTemplate(req.user!.name, input.title, input.start),
-      });
+    if (settings.notifyEmailOnMeetingRequest) {
+      const admins = await getAdmins();
+      for (const admin of admins) {
+        await emailProvider.send({
+          to: admin.email,
+          ...newMeetingRequestAdminTemplate(req.user!.name, input.title, input.start),
+        });
+      }
     }
 
     await recordAudit({

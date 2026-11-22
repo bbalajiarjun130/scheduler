@@ -15,6 +15,8 @@ import { projectsRouter } from "./routes/projects.js";
 import { meetingRequestsRouter } from "./routes/meetingRequests.js";
 import { permissionsRouter } from "./routes/permissions.js";
 import { integrationsRouter } from "./routes/integrations.js";
+import { settingsRouter } from "./routes/settings.js";
+import { notificationsRouter } from "./routes/notifications.js";
 
 export function createApp() {
   const app = express();
@@ -48,6 +50,8 @@ export function createApp() {
   app.use("/api/meeting-requests", meetingRequestsRouter);
   app.use("/api/permissions", permissionsRouter);
   app.use("/api/integrations", integrationsRouter);
+  app.use("/api/settings", settingsRouter);
+  app.use("/api/notifications", notificationsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

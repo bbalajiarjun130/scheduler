@@ -19,6 +19,9 @@ const settingsSchema = new Schema(
 
     notifyEmailOnNewRegistration: { type: Boolean, default: true },
     notifyEmailOnMeetingRequest: { type: Boolean, default: true },
+
+    reminderMinutesBefore: { type: Number, default: 30 },
+    defaultCalendarView: { type: String, enum: ["dayGridMonth", "timeGridWeek", "timeGridDay"], default: "timeGridWeek" },
   },
   { timestamps: true }
 );

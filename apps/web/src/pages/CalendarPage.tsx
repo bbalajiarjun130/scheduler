@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,6 +10,7 @@ import type { CalendarEventView, EventType } from "@scheduler/shared";
 import { Button } from "@/components/ui/button";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { fetchEvents, parseOccurrenceId, updateEvent } from "@/lib/eventsApi";
+import { fetchSettings } from "@/lib/settingsApi";
 import { ApiRequestError } from "@/lib/apiClient";
 import { categoryClasses, categoryCssColor, categoryLabel } from "@/lib/eventStyle";
 import { Plus } from "lucide-react";
@@ -33,6 +34,12 @@ export function CalendarPage() {
     queryFn: () => fetchEvents(range!.start, range!.end),
     enabled: Boolean(range),
   });
+
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: fetchSettings });
+  useEffect(() => {
+    if (settings) calendarRef.current?.getApi().changeView(settings.defaultCalendarView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings?.defaultCalendarView]);
 
   const filtered = useMemo(() => events.filter((e) => visibleTypes.includes(e.type)), [events, visibleTypes]);
 
