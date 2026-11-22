@@ -1,5 +1,7 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { Types } from "mongoose";
+import { isTest } from "../config/env.js";
 import {
   createMeetingRequestSchema,
   approveMeetingRequestSchema,
@@ -35,6 +37,14 @@ import {
 export const meetingRequestsRouter = Router();
 
 meetingRequestsRouter.use(requireAuth, requireApproved);
+
+const createRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: isTest ? 100_000 : 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many meeting requests submitted recently. Please try again later." },
+});
 
 async function loadView(doc: MeetingRequestDoc | null, isAdmin: boolean) {
   if (!doc) throw ApiError.notFound();
@@ -83,6 +93,7 @@ meetingRequestsRouter.get(
 
 meetingRequestsRouter.post(
   "/",
+  createRequestLimiter,
   asyncHandler(async (req, res) => {
     const input = createMeetingRequestSchema.parse(req.body);
 
