@@ -1,0 +1,55 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/lib/auth";
+import { ProtectedRoute, RequireAdmin, PublicOnlyRoute } from "@/routes/ProtectedRoute";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { LoginPage } from "@/pages/auth/LoginPage";
+import { SignupPage } from "@/pages/auth/SignupPage";
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
+import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
+import { PendingPage } from "@/pages/PendingPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { refetchOnWindowFocus: false } },
+});
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+            </Route>
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/pending" element={<PendingPage />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/calendar" element={<PlaceholderPage title="Calendar" />} />
+                <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
+                <Route path="/requests" element={<PlaceholderPage title="Meeting Requests" />} />
+
+                <Route element={<RequireAdmin />}>
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/settings" element={<PlaceholderPage title="Settings" />} />
+                </Route>
+              </Route>
+            </Route>
+
+            <Route path="*" element={<PlaceholderPage title="Not found" />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}

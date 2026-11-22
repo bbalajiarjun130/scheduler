@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 20% 12%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 20% 12%;
+  --border: 220 13% 91%;
+  --primary: 237 84% 60%;
+  --primary-foreground: 0 0% 100%;
+  --radius: 0.75rem;
+
+  --cat-meeting: 237 84% 60%;
+  --cat-work: 259 60% 55%;
+  --cat-personal: 160 50% 42%;
+  --cat-social: 25 90% 55%;
+  --cat-blocked: 220 9% 60%;
+}
+
+.dark {
+  --background: 222 25% 8%;
+  --foreground: 210 20% 96%;
+  --muted: 222 20% 14%;
+  --muted-foreground: 220 10% 65%;
+  --card: 222 22% 11%;
+  --card-foreground: 210 20% 96%;
+  --border: 222 15% 20%;
+  --primary: 237 84% 67%;
+  --primary-foreground: 222 25% 8%;
+
+  --cat-meeting: 237 84% 67%;
+  --cat-work: 259 70% 68%;
+  --cat-personal: 160 55% 52%;
+  --cat-social: 25 90% 62%;
+  --cat-blocked: 220 10% 55%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
