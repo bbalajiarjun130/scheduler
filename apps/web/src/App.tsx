@@ -15,6 +15,8 @@ import { CalendarPage } from "@/pages/CalendarPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { ProjectDetailPage } from "@/pages/ProjectDetailPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
+import { RequestsPage } from "@/pages/RequestsPage";
+import { AdminRequestsPage } from "@/pages/admin/AdminRequestsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -41,10 +43,11 @@ export default function App() {
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailPage />} />
-                <Route path="/requests" element={<PlaceholderPage title="Meeting Requests" />} />
+                <Route path="/requests" element={<RequestsPage />} />
 
                 <Route element={<RequireAdmin />}>
                   <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/requests" element={<AdminRequestsPage />} />
                   <Route path="/admin/settings" element={<PlaceholderPage title="Settings" />} />
                 </Route>
               </Route>

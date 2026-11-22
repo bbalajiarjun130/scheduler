@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CalendarEventView, EventType } from "@scheduler/shared";
+import type { CalendarEventView, EventType, MeetingRequestView } from "@scheduler/shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { EventListItem } from "@/components/calendar/EventListItem";
+import { StatusBadge } from "@/components/requests/StatusBadge";
 import { fetchDashboard } from "@/lib/dashboardApi";
 import { useAuth } from "@/lib/auth";
 import { Plus } from "lucide-react";
@@ -66,11 +67,29 @@ export function DashboardPage() {
             empty="Nothing scheduled today."
             onEventClick={setEditingEvent}
           />
-          <DashboardSection
-            title="Pending meeting requests"
-            events={[]}
-            empty="No pending requests yet — this arrives in a later phase."
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending meeting requests</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {data.pendingMeetingRequests.length === 0 && (
+                <p className="text-sm text-muted-foreground">No pending requests.</p>
+              )}
+              {data.pendingMeetingRequests.map((r: MeetingRequestView) => (
+                <button
+                  key={r.id}
+                  onClick={() => navigate("/admin/requests")}
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-left hover:bg-muted"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{r.title}</p>
+                    <p className="text-xs text-muted-foreground">{r.requester.name}</p>
+                  </div>
+                  <StatusBadge status={r.status} />
+                </button>
+              ))}
+            </CardContent>
+          </Card>
           <DashboardSection
             title="Upcoming meetings"
             events={data.upcomingMeetings}

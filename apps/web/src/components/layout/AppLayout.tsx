@@ -19,10 +19,11 @@ const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/requests", label: "Meeting Requests", icon: Inbox },
+  { to: "/requests", label: "My Requests", icon: Inbox },
 ];
 
 const adminNavItems = [
+  { to: "/admin/requests", label: "Approve Requests", icon: Inbox },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ];

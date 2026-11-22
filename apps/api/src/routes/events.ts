@@ -16,6 +16,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { listOccurrencesInRange, checkConflict, isValidObjectId, toExpanded } from "../services/calendarService.js";
 import { toEventView } from "../utils/serializers.js";
 import { recordAudit } from "../services/auditService.js";
+import { syncMeetingRequestFromEventChange } from "../services/meetingSyncService.js";
 
 export const eventsRouter = Router();
 
@@ -176,6 +177,7 @@ eventsRouter.patch(
       throw ApiError.badRequest("Moving the start/end time of a recurring series is not supported; edit a single occurrence instead");
     }
 
+    let timeMoved = false;
     if (!isRecurring && (input.start || input.end)) {
       const newStart = input.start ?? master.startUtc;
       const newEnd = input.end ?? master.endUtc;
@@ -190,9 +192,12 @@ eventsRouter.patch(
           });
         }
       }
+      timeMoved = newStart.getTime() !== master.startUtc.getTime() || newEnd.getTime() !== master.endUtc.getTime();
       master.startUtc = newStart;
       master.endUtc = newEnd;
     }
+
+    const statusChangedTo = input.status !== undefined && input.status !== master.status ? input.status : undefined;
 
     if (input.title !== undefined) master.title = input.title;
     if (input.description !== undefined) master.description = input.description;
@@ -204,6 +209,16 @@ eventsRouter.patch(
     if (input.projectId !== undefined) master.projectId = new Types.ObjectId(input.projectId);
 
     await master.save();
+
+    if (master.source === "meeting_approval") {
+      if (statusChangedTo === "cancelled") {
+        await syncMeetingRequestFromEventChange(master._id.toString(), { cancelled: true });
+      } else if (statusChangedTo === "completed") {
+        await syncMeetingRequestFromEventChange(master._id.toString(), { completed: true });
+      } else if (timeMoved) {
+        await syncMeetingRequestFromEventChange(master._id.toString(), { newStart: master.startUtc, newEnd: master.endUtc });
+      }
+    }
 
     await recordAudit({ actorId: req.user!._id, action: "event_updated", targetType: "CalendarEvent", targetId: master._id });
 
@@ -244,6 +259,9 @@ eventsRouter.delete(
         { upsert: true }
       );
     } else {
+      if (master.source === "meeting_approval") {
+        await syncMeetingRequestFromEventChange(master._id.toString(), { cancelled: true });
+      }
       await CalendarEvent.deleteMany({ $or: [{ _id: master._id }, { parentEventId: master._id }] });
     }
 

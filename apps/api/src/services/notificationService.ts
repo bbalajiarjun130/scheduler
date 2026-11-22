@@ -16,6 +16,10 @@ export async function notifyUser(params: {
   });
 }
 
+export async function getAdmins(): Promise<Array<{ _id: Types.ObjectId; name: string; email: string }>> {
+  return User.find({ role: "admin", status: "approved" }).select("_id name email").lean();
+}
+
 export async function notifyAllAdmins(params: {
   type: string;
   message: string;

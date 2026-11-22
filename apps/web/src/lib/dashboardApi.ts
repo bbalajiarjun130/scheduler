@@ -1,4 +1,4 @@
-import type { CalendarEventView } from "@scheduler/shared";
+import type { CalendarEventView, MeetingRequestView } from "@scheduler/shared";
 import { api } from "./apiClient";
 
 export interface DashboardData {
@@ -6,7 +6,7 @@ export interface DashboardData {
   upcomingMeetings: CalendarEventView[];
   upcomingWorkSessions: CalendarEventView[];
   upcomingPersonalSocial: CalendarEventView[];
-  pendingMeetingRequests: unknown[];
+  pendingMeetingRequests: MeetingRequestView[];
 }
 
 export function fetchDashboard(tz: string) {

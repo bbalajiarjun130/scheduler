@@ -1,6 +1,7 @@
-import type { CalendarEventView, ProjectView, PublicUser } from "@scheduler/shared";
+import type { CalendarEventView, MeetingRequestView, ProjectView, PublicUser } from "@scheduler/shared";
 import type { UserDoc } from "../models/User.js";
 import type { ProjectDoc } from "../models/Project.js";
+import type { MeetingRequestDoc } from "../models/MeetingRequest.js";
 import type { ExpandedEvent } from "../services/calendarService.js";
 import type { ProjectHours } from "../services/projectHoursService.js";
 
@@ -37,6 +38,35 @@ export function toProjectView(
     totalScheduledHours: hours.totalScheduledHours,
     totalCompletedHours: hours.totalCompletedHours,
     createdAt: (project as unknown as { createdAt: Date }).createdAt?.toISOString() ?? new Date().toISOString(),
+  };
+}
+
+export function toMeetingRequestView(
+  req: MeetingRequestDoc & { adminNotes?: string | null },
+  requester: { _id: { toString(): string }; name: string; email: string },
+  opts: { isAdmin: boolean; projectName?: string; meetUrl?: string }
+): MeetingRequestView {
+  return {
+    id: req._id.toString(),
+    requester: { id: requester._id.toString(), name: requester.name, email: requester.email },
+    category: req.category as MeetingRequestView["category"],
+    projectId: req.projectId?.toString(),
+    projectName: opts.projectName,
+    title: req.title,
+    description: req.description ?? undefined,
+    durationMinutes: req.durationMinutes,
+    start: req.startUtc.toISOString(),
+    end: req.endUtc.toISOString(),
+    format: req.format as MeetingRequestView["format"],
+    location: req.location ?? undefined,
+    status: req.status as MeetingRequestView["status"],
+    adminNotes: opts.isAdmin ? req.adminNotes ?? undefined : undefined,
+    alternativeStart: req.alternativeStartUtc?.toISOString(),
+    alternativeEnd: req.alternativeEndUtc?.toISOString(),
+    alternativeNote: req.alternativeNote ?? undefined,
+    resultingEventId: req.resultingEventId?.toString(),
+    meetUrl: opts.meetUrl,
+    createdAt: (req as unknown as { createdAt: Date }).createdAt?.toISOString() ?? new Date().toISOString(),
   };
 }
 

@@ -25,13 +25,13 @@ import { emailProvider } from "../services/email/index.js";
 import { verifyEmailTemplate, passwordResetTemplate } from "../services/email/templates.js";
 import { notifyAllAdmins } from "../services/notificationService.js";
 import { recordAudit } from "../services/auditService.js";
-import { env } from "../config/env.js";
+import { env, isTest } from "../config/env.js";
 
 export const authRouter = Router();
 
 const strictAuthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: isTest ? 100_000 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many attempts, please try again later." },

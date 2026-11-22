@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
-import { env } from "./config/env.js";
+import { env, isTest } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
@@ -12,6 +12,7 @@ import { usersRouter } from "./routes/users.js";
 import { eventsRouter } from "./routes/events.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { projectsRouter } from "./routes/projects.js";
+import { meetingRequestsRouter } from "./routes/meetingRequests.js";
 
 export function createApp() {
   const app = express();
@@ -30,7 +31,7 @@ export function createApp() {
 
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 300,
+    limit: isTest ? 1_000_000 : 300,
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -42,6 +43,7 @@ export function createApp() {
   app.use("/api/events", eventsRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/projects", projectsRouter);
+  app.use("/api/meeting-requests", meetingRequestsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
