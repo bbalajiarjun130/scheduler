@@ -11,6 +11,7 @@ import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
 import { PendingPage } from "@/pages/PendingPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import { CalendarPage } from "@/pages/CalendarPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 
 const queryClient = new QueryClient({
@@ -35,7 +36,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<DashboardPage />} />
-                <Route path="/calendar" element={<PlaceholderPage title="Calendar" />} />
+                <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/projects" element={<PlaceholderPage title="Projects" />} />
                 <Route path="/requests" element={<PlaceholderPage title="Meeting Requests" />} />
 

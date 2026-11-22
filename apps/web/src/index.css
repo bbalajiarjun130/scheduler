@@ -49,3 +49,45 @@ body {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
 }
+
+.fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: hsl(var(--muted));
+  --fc-list-event-hover-bg-color: hsl(var(--muted));
+  --fc-today-bg-color: hsl(var(--primary) / 0.06);
+  --fc-event-border-color: transparent;
+  font-size: 0.8125rem;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.fc .fc-button {
+  background: hsl(var(--muted));
+  border: none;
+  color: hsl(var(--foreground));
+  box-shadow: none !important;
+  text-transform: capitalize;
+}
+
+.fc .fc-button:hover {
+  background: hsl(var(--border));
+}
+
+.fc .fc-button-active {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.fc .fc-event {
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number {
+  color: hsl(var(--muted-foreground));
+}

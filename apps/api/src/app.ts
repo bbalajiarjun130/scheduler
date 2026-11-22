@@ -9,6 +9,8 @@ import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { usersRouter } from "./routes/users.js";
+import { eventsRouter } from "./routes/events.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 
 export function createApp() {
   const app = express();
@@ -36,6 +38,8 @@ export function createApp() {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/users", usersRouter);
+  app.use("/api/events", eventsRouter);
+  app.use("/api/dashboard", dashboardRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
