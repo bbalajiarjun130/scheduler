@@ -12,6 +12,7 @@ import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { fetchEvents, parseOccurrenceId, updateEvent } from "@/lib/eventsApi";
 import { fetchSettings } from "@/lib/settingsApi";
 import { ApiRequestError } from "@/lib/apiClient";
+import { Tooltip } from "@/components/ui/tooltip";
 import { categoryClasses, categoryCssColor, categoryLabel } from "@/lib/eventStyle";
 import { Plus } from "lucide-react";
 
@@ -100,22 +101,24 @@ export function CalendarPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Calendar</h1>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {allTypes.map((type) => {
-              const active = visibleTypes.includes(type);
-              const c = categoryClasses[type];
-              return (
-                <button
-                  key={type}
-                  onClick={() => toggleType(type)}
-                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity ${c.border} ${c.text} ${active ? "" : "opacity-40"}`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                  {categoryLabel[type]}
-                </button>
-              );
-            })}
-          </div>
+          <Tooltip text="Click a category to show/hide it on the calendar below">
+            <div className="flex items-center gap-2">
+              {allTypes.map((type) => {
+                const active = visibleTypes.includes(type);
+                const c = categoryClasses[type];
+                return (
+                  <button
+                    key={type}
+                    onClick={() => toggleType(type)}
+                    className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity ${c.border} ${c.text} ${active ? "" : "opacity-40"}`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                    {categoryLabel[type]}
+                  </button>
+                );
+              })}
+            </div>
+          </Tooltip>
           <Button
             size="sm"
             onClick={() => {

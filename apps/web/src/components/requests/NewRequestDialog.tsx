@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiRequestError } from "@/lib/apiClient";
+import { HelpHint } from "@/components/ui/tooltip";
 import { createMeetingRequest, fetchAvailability } from "@/lib/meetingRequestsApi";
 import { fetchMyProjects } from "@/lib/projectsApi";
 import { fetchPublicSettings } from "@/lib/settingsApi";
@@ -106,7 +107,10 @@ export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label>Category</Label>
+            <Label className="flex items-center gap-1.5">
+              Category
+              <HelpHint text="Project ties the meeting to a specific project; General is anything else work-related; Social is casual (coffee, dinner). You'll only be able to submit what the administrator has allowed for you." />
+            </Label>
             <Select value={category} onChange={(e) => setCategory(e.target.value as MeetingCategory)}>
               <option value="general">General</option>
               <option value="project">Project</option>
@@ -166,6 +170,10 @@ export function NewRequestDialog({ onClose, onCreated }: { onClose: () => void; 
         )}
 
         <div className="rounded-md border border-border p-3">
+          <p className="mb-2 text-xs text-muted-foreground">
+            Pick a date range, then "Find times" shows real open slots — already excluding anything on the
+            calendar and the required buffer between events.
+          </p>
           <div className="mb-2 flex items-end justify-between gap-2">
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">

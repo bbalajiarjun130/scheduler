@@ -7,18 +7,28 @@ import { Button } from "@/components/ui/button";
 import { EventFormDialog } from "@/components/calendar/EventFormDialog";
 import { EventListItem } from "@/components/calendar/EventListItem";
 import { StatusBadge } from "@/components/requests/StatusBadge";
+import { Tooltip } from "@/components/ui/tooltip";
+import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
+import { MemberDashboard } from "@/components/dashboard/MemberDashboard";
 import { fetchDashboard } from "@/lib/dashboardApi";
 import { useAuth } from "@/lib/auth";
 import { Plus } from "lucide-react";
 
-const quickCreateTypes: { type: EventType; label: string }[] = [
-  { type: "meeting", label: "Meeting" },
-  { type: "work_session", label: "Project work" },
-  { type: "personal", label: "Personal" },
-  { type: "social", label: "Social" },
+const quickCreateTypes: { type: EventType; label: string; hint: string }[] = [
+  { type: "meeting", label: "Meeting", hint: "A manually-scheduled meeting, created directly (not via the approval flow)" },
+  { type: "work_session", label: "Project work", hint: "Blocks time for a project — counts toward its hours and prevents others from booking over it" },
+  { type: "personal", label: "Personal", hint: "Private time on your calendar — hidden from collaborators by default" },
+  { type: "social", label: "Social", hint: "Casual, non-work time on your calendar" },
 ];
 
 export function DashboardPage() {
+  const { user } = useAuth();
+  // The admin dashboard aggregates data only admins can see (/api/dashboard is
+  // admin-only); everyone else gets a dashboard built from their own requests/projects.
+  return user?.role === "admin" ? <AdminDashboard /> : <MemberDashboard />;
+}
+
+function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -47,15 +57,19 @@ export function DashboardPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {quickCreateTypes.map((qc) => (
-            <Button key={qc.type} size="sm" variant="secondary" onClick={() => setQuickCreateType(qc.type)}>
-              <Plus size={14} /> {qc.label}
-            </Button>
+            <Tooltip key={qc.type} text={qc.hint}>
+              <Button size="sm" variant="secondary" onClick={() => setQuickCreateType(qc.type)}>
+                <Plus size={14} /> {qc.label}
+              </Button>
+            </Tooltip>
           ))}
           <Button size="sm" onClick={() => navigate("/calendar")}>
             Open calendar
           </Button>
         </div>
       </div>
+
+      <WelcomeBanner role="admin" />
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
 

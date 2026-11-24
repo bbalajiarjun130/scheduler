@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { HelpHint } from "@/components/ui/tooltip";
 import { fetchSettings, updateSettings } from "@/lib/settingsApi";
 
 const weekdays = [
@@ -97,7 +98,10 @@ export function SchedulingSettingsForm() {
             <Input value={form.defaultTimezone} onChange={(e) => setForm({ ...form, defaultTimezone: e.target.value })} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Buffer (min)</Label>
+            <Label className="flex items-center gap-1.5">
+              Buffer (min)
+              <HelpHint text="Minimum gap enforced before and after every event — nothing can be booked within this many minutes of an existing one" />
+            </Label>
             <Input
               type="number"
               min={0}
@@ -106,7 +110,10 @@ export function SchedulingSettingsForm() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Min notice (hrs)</Label>
+            <Label className="flex items-center gap-1.5">
+              Min notice (hrs)
+              <HelpHint text="How far in advance a meeting must be requested — e.g. 24 means no one can request a slot less than a day out" />
+            </Label>
             <Input
               type="number"
               min={0}
@@ -115,7 +122,10 @@ export function SchedulingSettingsForm() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Max advance (days)</Label>
+            <Label className="flex items-center gap-1.5">
+              Max advance (days)
+              <HelpHint text="How far into the future someone can book — e.g. 60 means requests can't be made more than two months out" />
+            </Label>
             <Input
               type="number"
               min={1}
@@ -124,7 +134,10 @@ export function SchedulingSettingsForm() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Reminder lead time (min)</Label>
+            <Label className="flex items-center gap-1.5">
+              Reminder lead time (min)
+              <HelpHint text="How long before a meeting starts the requester gets a reminder notification/email" />
+            </Label>
             <Input
               type="number"
               min={0}
@@ -145,7 +158,10 @@ export function SchedulingSettingsForm() {
         </div>
 
         <div>
-          <Label className="mb-1.5 block">Available meeting durations</Label>
+          <Label className="mb-1.5 flex items-center gap-1.5">
+            Available meeting durations
+            <HelpHint text="The platform-wide default duration choices. A specific user's allowed durations (set in Permissions) override this if non-empty." />
+          </Label>
           <div className="flex flex-wrap gap-2">
             {durationCatalog.map((d) => (
               <button
@@ -184,6 +200,7 @@ export function SchedulingSettingsForm() {
               onChange={(e) => setForm({ ...form, socialSchedulingEnabled: e.target.checked })}
             />
             Social scheduling enabled platform-wide
+            <HelpHint text="A kill switch on top of per-user permissions: if off, nobody can request social meetups even if you've granted them that permission individually" />
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input

@@ -4,6 +4,7 @@ import type { ProjectPermissionView, UpdateUserPermissionsInput } from "@schedul
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { HelpHint } from "@/components/ui/tooltip";
 import { fetchUsers } from "@/lib/usersApi";
 import { fetchProjects } from "@/lib/projectsApi";
 import { fetchUserPermissions, updateUserPermissions, updateProjectPermission, revokeProjectPermission } from "@/lib/permissionsApi";
@@ -106,38 +107,47 @@ function UserPermissionsEditor({ userId }: { userId: string }) {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <Toggle
               label="Can request general meetings"
+              hint="Lets them submit a request in the General category (not tied to a project)"
               checked={current.canRequestGeneral ?? false}
               onChange={(v) => setGeneral({ ...current, canRequestGeneral: v })}
             />
             <Toggle
               label="Can see general availability"
+              hint="Lets them browse your open time slots for General meetings, even before deciding to request one"
               checked={current.canSeeGeneralAvailability ?? false}
               onChange={(v) => setGeneral({ ...current, canSeeGeneralAvailability: v })}
             />
             <Toggle
               label="Can request social meetups"
+              hint="Lets them submit a Social-category request (coffee, dinner, etc.) — also requires Social scheduling to be enabled platform-wide in Settings"
               checked={current.canRequestSocial ?? false}
               onChange={(v) => setGeneral({ ...current, canRequestSocial: v })}
             />
             <Toggle
               label="Can see social availability"
+              hint="Lets them browse your open time slots for Social meetups"
               checked={current.canSeeSocialAvailability ?? false}
               onChange={(v) => setGeneral({ ...current, canSeeSocialAvailability: v })}
             />
             <Toggle
               label="Can request online meetings"
+              hint="Applies to their General/Social requests specifically — project-level online/in-person access is set separately below"
               checked={current.canRequestOnline ?? false}
               onChange={(v) => setGeneral({ ...current, canRequestOnline: v })}
             />
             <Toggle
               label="Can request in-person meetings"
+              hint="Applies to their General/Social requests specifically — project-level online/in-person access is set separately below"
               checked={current.canRequestInPerson ?? false}
               onChange={(v) => setGeneral({ ...current, canRequestInPerson: v })}
             />
           </div>
 
           <div>
-            <p className="mb-1.5 text-sm font-medium">Allowed durations (empty = use global defaults)</p>
+            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+              Allowed durations
+              <HelpHint text="Leave none selected to let this person use whichever durations are enabled platform-wide in Settings. Select specific ones to restrict them to just those." />
+            </p>
             <div className="flex flex-wrap gap-2">
               {durationOptions.map((d) => (
                 <button
@@ -166,7 +176,10 @@ function UserPermissionsEditor({ userId }: { userId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Project Access</CardTitle>
+          <CardTitle className="flex items-center gap-1.5">
+            Project Access
+            <HelpHint text="View and request-rights are separate: a collaborator added to a project automatically gets View, but you have to grant Request meeting yourself before they can ask for time on it." />
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {data?.projectPermissions.length === 0 && (
@@ -233,9 +246,15 @@ function ProjectPermissionRow({
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-        <Toggle label="View" checked={local.canView} onChange={(v) => setLocal({ ...local, canView: v })} />
+        <Toggle
+          label="View"
+          hint="They can see this project exists and its basic details — not its private notes"
+          checked={local.canView}
+          onChange={(v) => setLocal({ ...local, canView: v })}
+        />
         <Toggle
           label="Request meeting"
+          hint="They can submit a meeting request tied to this project"
           checked={local.canRequestMeeting}
           onChange={(v) => setLocal({ ...local, canRequestMeeting: v })}
         />
@@ -255,11 +274,22 @@ function ProjectPermissionRow({
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <label className="flex items-center gap-2">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
+      {hint && <HelpHint text={hint} />}
     </label>
   );
 }
